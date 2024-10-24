@@ -169,7 +169,7 @@ class ImageTLVInfo:
 
     def __post_init__(self) -> None:
         """Do initial validation of the header."""
-        if self.magic != IMAGE_TLV_INFO_MAGIC:
+        if self.magic != IMAGE_TLV_INFO_MAGIC and self.magic != IMAGE_TLV_PROT_INFO_MAGIC:
             raise MCUBootImageError(
                 f"TLV info magic is {hex(self.magic)}, expected {hex(IMAGE_TLV_INFO_MAGIC)}"
             )
@@ -182,7 +182,11 @@ class ImageTLVInfo:
     @staticmethod
     def load_from(file: BytesIO | BufferedReader) -> 'ImageTLVInfo':
         """Load an `ImageTLVInfo` from a file."""
-        return ImageTLVInfo.loads(file.read(IMAGE_TLV_INFO_STRUCT.size))
+        img_tlv = ImageTLVInfo.loads(file.read(IMAGE_TLV_INFO_STRUCT.size))
+        file.seek(img_tlv.tlv_tot - IMAGE_TLV_INFO_STRUCT.size, 1)
+        if img_tlv.magic == IMAGE_TLV_PROT_INFO_MAGIC:
+            img_tlv = ImageTLVInfo.loads(file.read(IMAGE_TLV_INFO_STRUCT.size))
+        return img_tlv
 
 
 @dataclass(frozen=True)

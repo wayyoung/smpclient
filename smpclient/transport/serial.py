@@ -11,13 +11,13 @@ import math
 import time
 from enum import IntEnum, unique
 from functools import cached_property
-from typing import Final
+from typing import Final, Optional, Union
 
 from serial import Serial, SerialException
 from smp import packet as smppacket
 from typing_extensions import override
 
-from smpclient.transport import SMPTransport, SMPTransportDisconnected
+from smpclient.transport import SMPTransport, SMPTransportDisconnected, suart
 
 logger = logging.getLogger(__name__)
 
@@ -120,7 +120,7 @@ class SMPSerialTransport(SMPTransport):
         self._max_smp_encoded_frame_size: Final = max_smp_encoded_frame_size
         self._line_length: Final = line_length
         self._line_buffers: Final = line_buffers
-        self._conn: Final = Serial(
+        self._conn: Union[Serial | suart.Suart] = Serial(
             baudrate=baudrate,
             bytesize=bytesize,
             parity=parity,
@@ -137,23 +137,31 @@ class SMPSerialTransport(SMPTransport):
         logger.debug(f"Initialized {self.__class__.__name__}")
 
     @override
-    async def connect(self, address: str, timeout_s: float) -> None:
+    async def connect(self, address: Optional[str], timeout_s: float) -> None:
         self._conn.port = address
-        logger.debug(f"Connecting to {self._conn.port=}")
-        start_time: Final = time.time()
-        while time.time() - start_time <= timeout_s:
-            try:
-                self._conn.open()
-                logger.debug(f"Connected to {self._conn.port=}")
-                return
-            except SerialException as e:
-                logger.debug(
-                    f"Failed to connect to {self._conn.port=}: {e}, "
-                    f"retrying in {SMPSerialTransport._CONNECTION_RETRY_INTERVAL_S} seconds"
-                )
-                await asyncio.sleep(SMPSerialTransport._CONNECTION_RETRY_INTERVAL_S)
+        logger.info(f"Connecting to port: {self._conn.port=}")
+        if address and ':' in address:
+            vidstr, pidstr = address.split(':')
+            vid = int(vidstr, 16)
+            pid = int(pidstr, 16)
+            self._conn = suart.Suart(vendor=vid, product=pid)
+            self._conn.port = address
+            logger.info("  USB connected")
+        else:
+            start_time: Final = time.time()
+            while time.time() - start_time <= timeout_s:
+                try:
+                    self._conn.open()
+                    logger.debug(f"Connected to {self._conn.port=}")
+                    return
+                except SerialException as e:
+                    logger.debug(
+                        f"Failed to connect to {self._conn.port=}: {e}, "
+                        f"retrying in {SMPSerialTransport._CONNECTION_RETRY_INTERVAL_S} seconds"
+                    )
+                    await asyncio.sleep(SMPSerialTransport._CONNECTION_RETRY_INTERVAL_S)
 
-        raise TimeoutError(f"Failed to connect to {address=}")
+            raise TimeoutError(f"Failed to connect to {address=}")
 
     @override
     async def disconnect(self) -> None:
