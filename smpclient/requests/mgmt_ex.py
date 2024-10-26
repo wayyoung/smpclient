@@ -116,6 +116,8 @@ class MgmtExImageState(BaseModel):
 
 class MgmtExStateReadResponse(message.ReadResponse):
 
+    model_config = ConfigDict(extra="allow", arbitrary_types_allowed=True)
+
     _GROUP_ID = GROUP_ID_MGMT_EX
     _COMMAND_ID = CMD_ID_STATE
 
@@ -135,6 +137,8 @@ class MgmtExUpdateWlcTxIcRequest(message.WriteRequest):
 
 
 class MgmtExUpdateWlcTxIcResponse(message.WriteResponse):
+
+    model_config = ConfigDict(extra="allow", arbitrary_types_allowed=True)
 
     _GROUP_ID = GROUP_ID_MGMT_EX
     _COMMAND_ID = CMD_ID_WLC_TX_UPDATE
