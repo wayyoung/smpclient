@@ -127,19 +127,18 @@ class MgmtExStatesRead(MgmtExStatesReadRequest, _MgmtExGroupBase):
     _Response = MgmtExStateReadResponse
 
 
-class MgmtExUpdateWlcTxIcRequest(message.ReadRequest):
+class MgmtExUpdateWlcTxIcRequest(message.WriteRequest):
     """Update WLC TX IC FW"""
 
     _GROUP_ID = GROUP_ID_MGMT_EX
     _COMMAND_ID = CMD_ID_WLC_TX_UPDATE
 
 
-class MgmtExUpdateWlcTxIcResponse(message.ReadResponse):
+class MgmtExUpdateWlcTxIcResponse(message.WriteResponse):
 
     _GROUP_ID = GROUP_ID_MGMT_EX
     _COMMAND_ID = CMD_ID_WLC_TX_UPDATE
 
-    images: List[MgmtExImageState]
     splitStatus: int | None = None
 
 
