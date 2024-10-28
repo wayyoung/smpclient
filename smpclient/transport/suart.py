@@ -2,16 +2,10 @@
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 """Allow creation of uart/console interface via usb google serial endpoint."""
-import argparse
+
 import array
-import os
 import platform
-import sys
-import termios
 import threading
-import time
-import traceback
-import tty
 from typing import Optional
 
 import usb
