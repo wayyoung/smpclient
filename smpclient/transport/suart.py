@@ -102,7 +102,7 @@ class Susb:
             raise SusbError("Interface not found")
 
         # Detach raiden.ko if it is loaded.
-        if platform.system() != 'Darwin':
+        if platform.system() == 'Linux':
             if dev.is_kernel_driver_active(intf.bInterfaceNumber):
                 dev.detach_kernel_driver(intf.bInterfaceNumber)
 
